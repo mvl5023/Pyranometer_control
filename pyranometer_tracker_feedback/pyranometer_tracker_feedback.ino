@@ -88,6 +88,7 @@ void loop()
 
 void sendCommand(int device, int com, long data)
 {
+   long data2;
    long temp;
    long replyData;
    
@@ -96,18 +97,22 @@ void sendCommand(int device, int com, long data)
    command[1] = byte(com);
    if(data < 0)
    {
-     data +=  quad;
+     data2 = data + quad;
    }
-   temp = data / cubed;
+   else
+   {
+     data2 = data;
+   }
+   temp = data2 / cubed;
    command[5] = byte(temp);
-   data -= (cubed * temp);
-   temp = data / squared;
+   data2 -= (cubed * temp);
+   temp = data2 / squared;
    command[4] = byte(temp);
-   data -= (squared * temp);
-   temp = data / 256;
+   data2 -= (squared * temp);
+   temp = data2 / 256;
    command[3] = byte(temp);
-   data -= (256 * data);
-   command[2] = byte(data);
+   data2 -= (256 * data2);
+   command[2] = byte(data2);
    
    // Sending command to stage(s)
    rs232.write(command, 6);

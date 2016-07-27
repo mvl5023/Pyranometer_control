@@ -60,7 +60,8 @@ void setup()
 
   //  Start software serial port with Zaber rotational stage
   rs232.begin(9600);
-  
+
+  /*
   delay(1000);
   sendCommand(0, renumber, 0);
   delay(500);
@@ -68,6 +69,7 @@ void setup()
   delay(500);
   //sendCommand(0, homer, 0);
   //delay(5000);
+  */
   Serial.println("Enter azimuth and zenith angles, separated by a space:");
 }
 
@@ -83,16 +85,27 @@ void loop()
     Serial.print(' ');
     Serial.println(theta);
         
-    sendCommand(azimuth, moveRel, stepsD(phi));
-    sendCommand(zenith, moveRel, stepsD(theta));
+    sendCommand(azimuth, moveRel, stepsDnew(phi));
+    sendCommand(zenith, moveRel, stepsDnew(theta));
     
     delay(1000);
   }
 }
 
+long stepsDnew(float degr)
+{
+  long stepValue;
+  stepValue = degr / resolutionDeg;
+  Serial.print("Step Value: ");
+  Serial.println(stepValue);
+  return stepValue;
+}
+
+
 void sendCommand(int device, int com, long data)
 {
-   long temp;
+   unsigned long data2;
+   unsigned long temp;
    long replyData;
    
    // Building the six command bytes
@@ -100,18 +113,51 @@ void sendCommand(int device, int com, long data)
    command[1] = byte(com);
    if(data < 0)
    {
-     data +=  quad;
+     data2 = data + quad;
+   } 
+   else
+   {
+    data2 = data;  
    }
-   temp = data / cubed;
+   temp = data2 / cubed;   
    command[5] = byte(temp);
-   data -= (cubed * temp);
-   temp = data / squared;
+   
+   Serial.print("Data1: ");
+   Serial.println(data2);
+   Serial.print("Temp1: ");
+   Serial.println(temp);
+   Serial.print("Command5: ");
+   Serial.println(command[5]);
+   
+   data2 -= (cubed * temp);
+   temp = data2 / squared;   
    command[4] = byte(temp);
-   data -= (squared * temp);
-   temp = data / 256;
+
+   Serial.print("Data2: ");
+   Serial.println(data2);
+   Serial.print("Temp2: ");
+   Serial.println(temp);
+   Serial.print("Command4: ");
+   Serial.println(command[4]);
+   
+   data2 -= (squared * temp);
+   temp = data2 / 256;   
    command[3] = byte(temp);
-   data -= (256 * data);
-   command[2] = byte(data);
+
+   Serial.print("Data3: ");
+   Serial.println(data2);
+   Serial.print("Temp3: ");
+   Serial.println(temp);
+   Serial.print("Command3: ");
+   Serial.println(command[3]);
+   
+   data2 -= (256 * temp);
+   command[2] = byte(data2);
+
+   Serial.print("Data4: ");
+   Serial.println(data2);
+   Serial.print("Command2: ");
+   Serial.println(command[2]);
    
    // Sending command to stage(s)
    rs232.write(command, 6);
