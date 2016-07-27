@@ -17,7 +17,7 @@ int pinPyro = 0;   //Analog pin used to read voltage from transimpedance amp
 int voltage = 0;   //value read from transimpedance amp
 int previousVoltage = 0;  //voltage value from previous iteration
 
-int dLay = 1000;   //time between incremental movement and photodiode voltage read
+int dLay = 200;   //time between incremental movement and photodiode voltage read
 int iter8 = 100;   //number of reads the photodiode voltage is averaged over
 
 //    Zaber rotational stage variables
@@ -62,9 +62,10 @@ void setup()
   rs232.begin(9600);
 
   analogReference(EXTERNAL);
+  
+  delay(1000);
 
   /*
-  delay(1000);
   sendCommand(0, renumber, 0);
   delay(1000);
   sendCommand(0, speedSet, 4551);   // Set speed to 10 degrees/sec
@@ -72,6 +73,7 @@ void setup()
   //sendCommand(0, homer, 0);
   //delay(5000);
   */
+  
 }
 
 void loop()
@@ -81,15 +83,15 @@ void loop()
   //  Feedback tracking
   if(currentMillis - shortMillis >= intervalShort)
   {
-    optimize(azimuth, stepsD(0.25));
-    //optimize(zenith, stepsD(0.25));
+    optimize(azimuth, stepsD(0.0025));
+    optimize(zenith, stepsD(0.002));
   }   
 }
 
 void sendCommand(int device, int com, long data)
 {
-   long data2;
-   long temp;
+   unsigned long data2;
+   unsigned long temp;
    long replyData;
    
    // Building the six command bytes
