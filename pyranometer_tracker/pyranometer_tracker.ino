@@ -28,7 +28,7 @@ int pinPyro = 0;   //Analog pin used to read voltage from transimpedance amp
 int voltage = 0;   //value read from transimpedance amp
 int previousVoltage = 0;  //voltage value from previous iteration
 
-int dLay = 50;   //time between incremental movement and photodiode voltage read
+int dLay = 100;   //time between incremental movement and photodiode voltage read
 int iter8 = 100;   //number of reads the photodiode voltage is averaged over
 
 //    Zaber rotational stage variables
@@ -135,14 +135,15 @@ void loop()
   {
     optimize(azimuth, stepsD(0.25));
     optimize(zenith, stepsD(0.25));
-    optimize(azimuth, stepsD(0.005));
-    optimize(zenith, stepsD(0.005));
+    optimize(azimuth, stepsD(0.0025));
+    optimize(zenith, stepsD(0.0025));
   }   
 }
 
 void sendCommand(int device, int com, long data)
 {
-   unsigned int temp;
+   unsigned long data2;
+   unsigned long temp;
    long replyData;
    
    // Building the six command bytes
@@ -150,18 +151,22 @@ void sendCommand(int device, int com, long data)
    command[1] = byte(com);
    if(data < 0)
    {
-     data +=  quad;
+     data2 = data + quad;
    }
-   temp = data / cubed;
+   else
+   {
+     data2 = data;
+   }
+   temp = data2 / cubed;
    command[5] = byte(temp);
-   data -= (cubed * temp);
-   temp = data / squared;
+   data2 -= (cubed * temp);
+   temp = data2 / squared;
    command[4] = byte(temp);
-   data -= (squared * temp);
-   temp = data / 256;
+   data2 -= (squared * temp);
+   temp = data2 / 256;
    command[3] = byte(temp);
-   data -= (256 * data);
-   command[2] = byte(data);
+   data2 -= (256 * data2);
+   command[2] = byte(data2);
    
    // Sending command to stage(s)
    rs232.write(command, 6);
