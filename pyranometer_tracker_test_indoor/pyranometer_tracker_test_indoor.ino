@@ -18,7 +18,8 @@
 
 //    Zaber rotational stage variables
 byte command[6];
-char reply[6];
+byte reply[6];
+byte dumper;
 
 float phi;    // azimuthal angle
 float theta;  // elevation angle
@@ -61,7 +62,7 @@ void setup()
   //  Start software serial port with Zaber rotational stage
   rs232.begin(9600);
 
-  /*
+  
   delay(1000);
   sendCommand(0, renumber, 0);
   delay(500);
@@ -69,7 +70,7 @@ void setup()
   delay(500);
   //sendCommand(0, homer, 0);
   //delay(5000);
-  */
+  
   Serial.println("Enter azimuth and zenith angles, separated by a space:");
 }
 
@@ -85,11 +86,16 @@ void loop()
     Serial.print(' ');
     Serial.println(theta);
         
-    sendCommand(azimuth, moveRel, stepsDnew(phi));
-    sendCommand(zenith, moveRel, stepsDnew(theta));
+    sendCommand(azimuth, moveAbs, stepsDnew(phi));
+    delay(100);
+    sendCommand(zenith, moveAbs, stepsDnew(theta));
     
     delay(1000);
   }
+  sendCommand(azimuth, getPos, 0);
+  delay(100);
+  sendCommand(zenith, getPos, 0);
+  delay(3000);
 }
 
 long stepsDnew(float degr)
@@ -106,11 +112,12 @@ void sendCommand(int device, int com, long data)
 {
    unsigned long data2;
    unsigned long temp;
-   long replyData;
+   unsigned long replyData;
+   long replyNeg;
    
    // Building the six command bytes
-   command[0] = byte(device);
-   command[1] = byte(com);
+   command[0] = byte(device);     // Byte 1 = device ID
+   command[1] = byte(com);        // Byte 2 = command #
    if(data < 0)
    {
      data2 = data + quad;
@@ -120,55 +127,27 @@ void sendCommand(int device, int com, long data)
     data2 = data;  
    }
    temp = data2 / cubed;   
-   command[5] = byte(temp);
-   
-   Serial.print("Data1: ");
-   Serial.println(data2);
-   Serial.print("Temp1: ");
-   Serial.println(temp);
-   Serial.print("Command5: ");
-   Serial.println(command[5]);
+   command[5] = byte(temp);     // Byte 6 = MSB
    
    data2 -= (cubed * temp);
    temp = data2 / squared;   
-   command[4] = byte(temp);
-
-   Serial.print("Data2: ");
-   Serial.println(data2);
-   Serial.print("Temp2: ");
-   Serial.println(temp);
-   Serial.print("Command4: ");
-   Serial.println(command[4]);
+   command[4] = byte(temp);     // Byte 5
    
    data2 -= (squared * temp);
    temp = data2 / 256;   
-   command[3] = byte(temp);
-
-   Serial.print("Data3: ");
-   Serial.println(data2);
-   Serial.print("Temp3: ");
-   Serial.println(temp);
-   Serial.print("Command3: ");
-   Serial.println(command[3]);
+   command[3] = byte(temp);     // Byte 4
    
    data2 -= (256 * temp);
-   command[2] = byte(data2);
+   command[2] = byte(data2);    // Byte 3 = LSB
 
-   Serial.print("Data4: ");
-   Serial.println(data2);
-   Serial.print("Command2: ");
-   Serial.println(command[2]);
+   // Clearing serial buffer
+   while(rs232.available() > 0)
+   {
+     rs232.readBytes(&dumper, 1);
+   }
    
    // Sending command to stage(s)
    rs232.write(command, 6);
-   
-   Serial.print(command[2]);
-   Serial.print(' ');
-   Serial.print(command[3]);
-   Serial.print(' ');
-   Serial.print(command[4]);
-   Serial.print(' ');
-   Serial.println(command[5]);
 
    // Updating position of stage
    if(com == moveAbs)
@@ -208,10 +187,10 @@ void sendCommand(int device, int com, long data)
    replyData = (cubed * reply[5]) + (squared * reply[4]) + (256 * reply[3]) + reply[2];
    if(reply[5] > 127)
    {
-     replyData -= quad;
+     replyNeg = replyData - quad;
    }
 
-   /*
+   
    // Printing full reply bytes as well as reply data in decimal 
    Serial.print(reply[0]);
    Serial.print(' ');
@@ -225,6 +204,12 @@ void sendCommand(int device, int com, long data)
    Serial.print(' ');
    Serial.print(reply[5]);
    Serial.print("\tData:");
-   Serial.println(replyData);  
-   */ 
+   if(reply[5] > 127)
+   {
+     Serial.println(replyNeg);  
+   }
+   else
+   {
+     Serial.println(replyData);  
+   }
 }
