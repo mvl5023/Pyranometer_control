@@ -19,7 +19,7 @@
 //    Zaber rotational stage variables
 byte command[6];
 byte reply[6];
-byte dumper;
+long replyData;
 
 float phi;    // azimuthal angle
 float theta;  // elevation angle
@@ -60,16 +60,15 @@ void setup()
   Serial.println("--------------------------------------------------------");
 
   //  Start software serial port with Zaber rotational stage
-  rs232.begin(9600);
-
-  
+  rs232.begin(9600);  
   delay(1000);
-  sendCommand(0, renumber, 0);
+
+  /*
+  replyData = sendCommand(0, renumber, 0);  
   delay(500);
-  sendCommand(0, speedSet, 4551);   // Set speed to 10 degrees/sec
+  replyData = sendCommand(0, speedSet, 4551);   // Set speed to 10 degrees/sec
   delay(500);
-  //sendCommand(0, homer, 0);
-  //delay(5000);
+  */
   
   Serial.println("Enter azimuth and zenith angles, separated by a space:");
 }
@@ -86,15 +85,13 @@ void loop()
     Serial.print(' ');
     Serial.println(theta);
         
-    sendCommand(azimuth, moveAbs, stepsDnew(phi));
-    delay(100);
-    sendCommand(zenith, moveAbs, stepsDnew(theta));
+    replyData = sendCommand(azimuth, moveAbs, stepsDnew(phi));
+    replyData = sendCommand(zenith, moveAbs, stepsDnew(theta));
     
     delay(1000);
   }
-  sendCommand(azimuth, getPos, 0);
-  delay(100);
-  sendCommand(zenith, getPos, 0);
+  azimPos = sendCommand(azimuth, getPos, 0);
+  zeniPos = sendCommand(zenith, getPos, 0);
   delay(3000);
 }
 
@@ -107,90 +104,66 @@ long stepsDnew(float degr)
   return stepValue;
 }
 
-
-void sendCommand(int device, int com, long data)
+long sendCommand(int device, int com, long data)
 {
    unsigned long data2;
    unsigned long temp;
-   unsigned long replyData;
+   unsigned long repData;
    long replyNeg;
+   byte dumper[1];
    
    // Building the six command bytes
-   command[0] = byte(device);     // Byte 1 = device ID
-   command[1] = byte(com);        // Byte 2 = command #
+   command[0] = byte(device);
+   command[1] = byte(com);
    if(data < 0)
    {
      data2 = data + quad;
-   } 
+   }
    else
    {
-    data2 = data;  
+     data2 = data;
    }
-   temp = data2 / cubed;   
-   command[5] = byte(temp);     // Byte 6 = MSB
-   
+   temp = data2 / cubed;
+   command[5] = byte(temp);
    data2 -= (cubed * temp);
-   temp = data2 / squared;   
-   command[4] = byte(temp);     // Byte 5
-   
+   temp = data2 / squared;
+   command[4] = byte(temp);
    data2 -= (squared * temp);
-   temp = data2 / 256;   
-   command[3] = byte(temp);     // Byte 4
+   temp = data2 / 256;
+   command[3] = byte(temp);
+   data2 -= (256 * data2);
+   command[2] = byte(data2);
    
-   data2 -= (256 * temp);
-   command[2] = byte(data2);    // Byte 3 = LSB
-
    // Clearing serial buffer
    while(rs232.available() > 0)
    {
-     rs232.readBytes(&dumper, 1);
+     rs232.readBytes(dumper, 1);
    }
    
    // Sending command to stage(s)
    rs232.write(command, 6);
 
-   // Updating position of stage
-   if(com == moveAbs)
-   {
-     if(device == azimuth)
-     {
-       azimPos = data;
-     }
-     else if(device == zenith)
-     {
-       zeniPos = data;
-     }
-   }
-   else if(com == moveRel)
-   {
-     if(device == azimuth)
-     {
-       azimPos += data;
-     }
-     else if(device == zenith)
-     {
-       zeniPos += data;
-     }
-   }
-   else if(com == homer)
-   {
-     azimPos = 0;
-     zeniPos = 0;
-   }
+   delay(20);
    
    // Reading device reply
    if(rs232.available() > 0)
    {
      rs232.readBytes(reply, 6);
    }
+   
+   repData = (cubed * reply[5]) + (squared * reply[4]) + (256 * reply[3]) + reply[2];
 
-   replyData = (cubed * reply[5]) + (squared * reply[4]) + (256 * reply[3]) + reply[2];
+   if(reply[4] == 1)
+   {
+     repData += 65536;
+   }
+   
    if(reply[5] > 127)
    {
-     replyNeg = replyData - quad;
+     replyNeg = repData - quad;
    }
 
-   
+   /*
    // Printing full reply bytes as well as reply data in decimal 
    Serial.print(reply[0]);
    Serial.print(' ');
@@ -202,14 +175,17 @@ void sendCommand(int device, int com, long data)
    Serial.print(' ');
    Serial.print(reply[4]);
    Serial.print(' ');
-   Serial.print(reply[5]);
+   Serial.println(reply[5]);
    Serial.print("\tData:");
+   */
    if(reply[5] > 127)
    {
-     Serial.println(replyNeg);  
+     //Serial.println(replyNeg);
+     return replyNeg;
    }
    else
    {
-     Serial.println(replyData);  
-   }
+     //Serial.println(repData);  
+     return repData;
+   }    
 }
