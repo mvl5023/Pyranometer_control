@@ -1,4 +1,5 @@
 /*   Pyranometer tracker using feedback only   
+ *    Active Test Sketch
  *   
  *   Michael Lipski
  *   AOPL
@@ -185,12 +186,12 @@ void optimize(int axis, long increment)
   delay(dLay);
   voltage = readAnalog(pinPyro, iter8);  
 
-  /*
+  
   Serial.print(voltage);
   Serial.print(' ');
   Serial.print(axis);
   Serial.println('+');
-  */
+  
   
   //Start optimizing along axis
   if(voltage > previousVoltage)         
@@ -202,12 +203,12 @@ void optimize(int axis, long increment)
       delay(dLay);
       voltage = readAnalog(pinPyro, iter8); 
 
-      /*
+      
       Serial.print(voltage);
       Serial.print(' ');
       Serial.print(axis);
       Serial.println('+'); 
-      */ 
+      
     }
   }
   else if(voltage < previousVoltage)
@@ -217,12 +218,12 @@ void optimize(int axis, long increment)
     delay(dLay);
     voltage = readAnalog(pinPyro, iter8); 
 
-    /*
+    
     Serial.print(voltage);
     Serial.print(' ');
     Serial.print(axis);
     Serial.println('-');
-    */
+    
   
     while(voltage > previousVoltage)
     {        
@@ -231,12 +232,12 @@ void optimize(int axis, long increment)
       delay(dLay);
       voltage = readAnalog(pinPyro, iter8);
 
-      /*
+      
       Serial.print(voltage);
       Serial.print(' ');
       Serial.print(axis);
       Serial.println('-');
-      */
+      
   
     }
   }  
