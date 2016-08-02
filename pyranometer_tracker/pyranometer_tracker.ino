@@ -34,6 +34,7 @@ int iter8 = 100;   //number of reads the photodiode voltage is averaged over
 //    Zaber rotational stage variables
 byte command[6];
 char reply[6];
+long replyData;
 
 int azimuth = 1;    // Device ID of azimuth stage
 int zenith = 2;     // Device ID of elevation stage
@@ -88,12 +89,13 @@ void setup()
   rs232.begin(9600);
   
   delay(1000);
-  sendCommand(0, renumber, 0);
+
+  /*
+  replyData = sendCommand(0, renumber, 0);
   delay(1000);
-  sendCommand(0, speedSet, 4551);   // Set speed to 10 degrees/sec
+  replyData = sendCommand(0, speedSet, 4551);   // Set speed to 10 degrees/sec
   delay(1000);
-  //sendCommand(0, homer, 0);
-  //delay(5000);
+  */
 }
 
 void loop()
@@ -124,8 +126,8 @@ void loop()
         theta = SunPos.Zenith * (180/PI);
         phi = SunPos.Azimuth * (180/PI) + 180;
 
-        sendCommand(azimuth, moveAbs, phi);
-        sendCommand(zenith, moveAbs, theta);
+        azimPos = sendCommand(azimuth, moveAbs, phi);
+        zeniPos = sendCommand(zenith, moveAbs, theta);
       }
     }
   }
@@ -140,11 +142,13 @@ void loop()
   }   
 }
 
-void sendCommand(int device, int com, long data)
+long sendCommand(int device, int com, long data)
 {
    unsigned long data2;
    unsigned long temp;
-   long replyData;
+   unsigned long repData;
+   long replyNeg;
+   byte dumper[1];
    
    // Building the six command bytes
    command[0] = byte(device);
@@ -168,48 +172,33 @@ void sendCommand(int device, int com, long data)
    data2 -= (256 * data2);
    command[2] = byte(data2);
    
+   // Clearing serial buffer
+   while(rs232.available() > 0)
+   {
+     rs232.readBytes(dumper, 1);
+   }
+   
    // Sending command to stage(s)
    rs232.write(command, 6);
 
-   // Updating position of stage
-   if(com == moveAbs)
-   {
-     if(device == azimuth)
-     {
-       azimPos = data;
-     }
-     else if(device == zenith)
-     {
-       zeniPos = data;
-     }
-   }
-   else if(com == moveRel)
-   {
-     if(device == azimuth)
-     {
-       azimPos += data;
-     }
-     else if(device == zenith)
-     {
-       zeniPos += data;
-     }
-   }
-   else if(com == homer)
-   {
-     azimPos = 0;
-     zeniPos = 0;
-   }
+   delay(20);
    
    // Reading device reply
    if(rs232.available() > 0)
    {
      rs232.readBytes(reply, 6);
    }
+   
+   repData = (cubed * reply[5]) + (squared * reply[4]) + (256 * reply[3]) + reply[2];
 
-   replyData = (cubed * reply[5]) + (squared * reply[4]) + (256 * reply[3]) + reply[2];
+   if(reply[4] == 1)
+   {
+     repData += 65536;
+   }
+   
    if(reply[5] > 127)
    {
-     replyData -= quad;
+     replyNeg = repData - quad;
    }
 
    /*
@@ -224,10 +213,19 @@ void sendCommand(int device, int com, long data)
    Serial.print(' ');
    Serial.print(reply[4]);
    Serial.print(' ');
-   Serial.print(reply[5]);
+   Serial.println(reply[5]);
    Serial.print("\tData:");
-   Serial.println(replyData);  
-   */ 
+   */
+   if(reply[5] > 127)
+   {
+     //Serial.println(replyNeg);
+     return replyNeg;
+   }
+   else
+   {
+     //Serial.println(repData);  
+     return repData;
+   }    
 }
 
 void optimize(int axis, long increment)
@@ -235,11 +233,20 @@ void optimize(int axis, long increment)
   //Get starting conditions before optimizing
   voltage = readAnalog(pinPyro, iter8); 
   
+  Serial.println(voltage);
+  
   //Move one increment in +phi and get new voltage and position
-  sendCommand(axis, moveRel, increment);
+  replyData = sendCommand(axis, moveRel, increment);
   previousVoltage = voltage;
   delay(dLay);
   voltage = readAnalog(pinPyro, iter8);  
+
+  /*
+  Serial.print(voltage);
+  Serial.print(' ');
+  Serial.print(axis);
+  Serial.println('+');
+  */
   
   //Start optimizing along axis
   if(voltage > previousVoltage)         
@@ -247,23 +254,46 @@ void optimize(int axis, long increment)
     while(voltage > previousVoltage)
     {
       previousVoltage = voltage;
-      sendCommand(axis, moveRel, increment);
+      replyData = sendCommand(axis, moveRel, increment);
       delay(dLay);
       voltage = readAnalog(pinPyro, iter8); 
+
+      /*
+      Serial.print(voltage);
+      Serial.print(' ');
+      Serial.print(axis);
+      Serial.println('+'); 
+      */ 
     }
   }
   else if(voltage < previousVoltage)
   {
     previousVoltage = voltage;
-    sendCommand(axis, moveRel, (-2)*increment);
+    replyData = sendCommand(axis, moveRel, (-2)*increment);
     delay(dLay);
-    voltage = readAnalog(pinPyro, iter8);       
+    voltage = readAnalog(pinPyro, iter8); 
+
+    /*
+    Serial.print(voltage);
+    Serial.print(' ');
+    Serial.print(axis);
+    Serial.println('-');
+    */
+  
     while(voltage > previousVoltage)
     {        
       previousVoltage = voltage;
-      sendCommand(axis, moveRel, (-1)*increment);
+      replyData = sendCommand(axis, moveRel, (-1)*increment);
       delay(dLay);
-      voltage = readAnalog(pinPyro, iter8); 
+      voltage = readAnalog(pinPyro, iter8);
+
+      /*
+      Serial.print(voltage);
+      Serial.print(' ');
+      Serial.print(axis);
+      Serial.println('-');
+      */
+  
     }
   }  
 }
