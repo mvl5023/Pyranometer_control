@@ -1,10 +1,10 @@
-/*   Closed-loop photodiode-based quadrant solar tracker
+/*   Closed-loop LDR-based quadrant solar tracker
  *   
  *   Michael Lipski
  *   AOPL
  *   Summer 2016
  *   
- *   Uses four photodiodes to track the sun.  Intended for coarse tracking for the pyranometer tube.   
+ *   Uses four CdS photoresistors to track the sun.  Intended for coarse tracking for the pyranometer tube.   
  */
 
 #include <zaberx.h>
@@ -12,23 +12,23 @@
 #include <SoftwareSerial.h>
 
 //    Feedback variables
-int topR = 0;       // top right photodiode
-int topL = 1;       // top left photodiode
-int bottomR = 2;    // bottom right photodiode
-int bottomL = 3;    // bottom left photodiode
+int topR = 0;       // top right photoresistor
+int topL = 1;       // top left photoresistor
+int bottomR = 2;    // bottom right photoresistor
+int bottomL = 3;    // bottom left photoresistor
 
-int vTR;    // voltage from top right photodiode
-int vTL;    // voltage from top left photodiode
-int vBR;    // voltage from bottom right photodiode
-int vBL;    // voltage from bottom left photodiode
+int vTR;    // voltage from top right photoresistor
+int vTL;    // voltage from top left photoresistor
+int vBR;    // voltage from bottom right photoresistor
+int vBL;    // voltage from bottom left photoresistor
 
 int top;      // average of top right and top left voltages
 int bottom;   // average of bottom right and bottom left voltages
 int right;    // average of top right and bottom right voltages
 int left;     // average of top left and bottom left voltages
 
-int dLay = 100;   //time between incremental movement and photodiode voltage read
-int iter8 = 100;   //number of reads the photodiode voltage is averaged over
+int dLay = 100;   //time between incremental movement and photoresistor voltage read
+int iter8 = 100;   //number of reads the photoresistor voltage is averaged over
 
 //    Zaber rotational stage variables
 byte command[6];
@@ -181,7 +181,7 @@ long sendCommand(int device, int com, long data)
 
 void quadrant(long increment)
 {
-  // Read voltages from photodiodes
+  // Read voltages from photoresistor
   vTR = readAnalog(topR, iter8);
   vTL = readAnalog(topL, iter8);
   vBR = readAnalog(bottomR, iter8);
@@ -195,11 +195,11 @@ void quadrant(long increment)
 
   if(top > bottom)
   {
-    replyData = sendCommand(zenith, moveRel, increment);
+    replyData = sendCommand(zenith, moveRel, (-1)*increment);
   }
   else if(top < bottom)
   {
-    replyData = sendCommand(zenith, moveRel, (-1)*increment);
+    replyData = sendCommand(zenith, moveRel, increment);
   }
 
   if(right > left)
