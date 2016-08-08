@@ -17,16 +17,6 @@ int topL = 1;       // top left photoresistor
 int bottomR = 2;    // bottom right photoresistor
 int bottomL = 3;    // bottom left photoresistor
 
-int vTR;    // voltage from top right photoresistor
-int vTL;    // voltage from top left photoresistor
-int vBR;    // voltage from bottom right photoresistor
-int vBL;    // voltage from bottom left photoresistor
-
-int top;      // average of top right and top left voltages
-int bottom;   // average of bottom right and bottom left voltages
-int right;    // average of top right and bottom right voltages
-int left;     // average of top left and bottom left voltages
-
 int dLay = 100;   //time between incremental movement and photoresistor voltage read
 int iter8 = 100;   //number of reads the photoresistor voltage is averaged over
 
@@ -75,7 +65,6 @@ void setup()
   //analogReference(EXTERNAL);
   
   delay(1000);
-
   
   replyData = sendCommand(0, renumber, 0);
   delay(1000);
@@ -181,17 +170,17 @@ long sendCommand(int device, int com, long data)
 
 void quadrant(long increment)
 {
-  // Read voltages from photoresistor
-  vTR = readAnalog(topR, iter8);
-  vTL = readAnalog(topL, iter8);
-  vBR = readAnalog(bottomR, iter8);
-  vBL = readAnalog(bottomL, iter8);
+  // Find voltages from photoresistor voltage divider
+  int vTR = readAnalog(topR, iter8);   // voltage from top right photoresistor
+  int vTL = readAnalog(topL, iter8);    // voltage from top left photoresistor
+  int vBR = readAnalog(bottomR, iter8);    // voltage from bottom right photoresistor
+  int vBL = readAnalog(bottomL, iter8);    // voltage from bottom left photoresistor
 
   // Find average values
-  top = (vTR + vTL) / 2;
-  bottom = (vBR + vBL) / 2;
-  right = (vTR + vBR) / 2;
-  left = (vTL + vBL) / 2;
+  int top = (vTR + vTL) / 2;      // average of top right and top left voltages
+  int bottom = (vBR + vBL) / 2;   // average of bottom right and bottom left voltages
+  int right = (vTR + vBR) / 2;    // average of top right and bottom right voltages
+  int left = (vTL + vBL) / 2;     // average of top left and bottom left voltages
 
   if(top > bottom)
   {
