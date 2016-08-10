@@ -7,6 +7,8 @@
  *   Uses four CdS photoresistors to track the sun.  Intended for coarse tracking for the pyranometer tube.   
  */
  
+#include <LiquidCrystal.h>
+
 #include <zaberx.h>
 
 //    Feedback variables
@@ -22,10 +24,12 @@ int vBL;    // voltage from bottom left photoresistor
 
 int iter8 = 100;   //number of reads the photoresistor voltage is averaged over
 
+LiquidCrystal lcd(8, 9, 10, 11, 12, 13);      // (RS, enable, D4, D5, D6, D7)
+
 void setup() 
 {
-  //  Open serial connection with computer
-  Serial.begin(9600);  
+  //  Begin serial connection with LCD
+  lcd.begin(16, 2);     // (columns, rows)
   delay(1000);  
 }
 
@@ -36,15 +40,19 @@ void loop()
   vBR = readAnalog(bottomR, iter8);
   vBL = readAnalog(bottomL, iter8);
 
-  Serial.print("Top Right: ");
-  Serial.print(vTR);
-  Serial.print("\tTop Left: ");
-  Serial.print(vTL);
-  Serial.print("\tBottom Right: ");
-  Serial.print(vBR);
-  Serial.print("\tBottom Left: ");
-  Serial.println(vBL);
-
-  delay(1000);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("TL:");
+  lcd.print(vTL);
+  lcd.setCursor(8, 0);
+  lcd.print("TR:");
+  lcd.print(vTR);
+  lcd.setCursor(0, 1);
+  lcd.print("BL:");
+  lcd.print(vBL);
+  lcd.setCursor(8, 1);
+  lcd.print("BR:");
+  lcd.print(vBR);
+  
+  delay(500);
 }
-
