@@ -1,4 +1,5 @@
 /*   Closed-loop LDR-based quadrant solar tracker
+ *    Hitachi HD44780 LCD output
  *   
  *   Michael Lipski
  *   AOPL

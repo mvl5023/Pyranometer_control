@@ -6,6 +6,8 @@
  *   
  *   Uses four CdS photoresistors to track the sun.  Intended for coarse tracking for the pyranometer tube.   
  */
+ 
+#include <LiquidCrystal.h>
 
 #include <zaberx.h>
 
@@ -17,7 +19,7 @@ int topL = 1;       // top left photoresistor
 int bottomR = 2;    // bottom right photoresistor
 int bottomL = 3;    // bottom left photoresistor
 
-int dLay = 100;   //time between incremental movement and photoresistor voltage read
+int dLay = 200;   //time between incremental movement and photoresistor voltage read
 int iter8 = 100;   //number of reads the photoresistor voltage is averaged over
 
 //    Zaber rotational stage variables
@@ -43,7 +45,7 @@ int returnPos = 17;   // returns the value (in microsteps) of the position store
 int move2Pos = 18;    // move to the position stored in the indicated register
 int reset = 0;        // akin to toggling device power
 
-const unsigned int intervalShort = 100;   // Period of feedback iterations
+const unsigned int intervalShort = 200;   // Period of feedback iterations
 
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
@@ -52,12 +54,14 @@ unsigned long previousMillis = 0;
 int RXPin = 2;
 int TXPin = 3;
 
+LiquidCrystal lcd(8, 9, 10, 11, 12, 13);      // (RS, enable, D4, D5, D6, D7)
+
 SoftwareSerial rs232(RXPin, TXPin);   //RX, TX
 
 void setup() 
 {
-  //  Open serial connection with computer
-  Serial.begin(9600);
+  // begin communication with LCD
+  lcd.begin(16, 2);     // (columns, rows)
 
   //  Start software serial port with Zaber rotational stage
   rs232.begin(9600);
@@ -79,7 +83,7 @@ void loop()
   if(currentMillis - previousMillis > intervalShort)
   {
     previousMillis = currentMillis;
-    quadrant(stepsD(0.2));
+    quadrant(stepsD(0.05));
   }  
 }
 
@@ -177,6 +181,20 @@ void quadrant(long increment)
   int vBR = readAnalog(bottomR, iter8);    // voltage from bottom right photoresistor
   int vBL = readAnalog(bottomL, iter8);    // voltage from bottom left photoresistor
 
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("TL:");
+  lcd.print(vTL);
+  lcd.setCursor(8, 0);
+  lcd.print("TR:");
+  lcd.print(vTR);
+  lcd.setCursor(0, 1);
+  lcd.print("BL:");
+  lcd.print(vBL);
+  lcd.setCursor(8, 1);
+  lcd.print("BR:");
+  lcd.print(vBR);
+
   // Find average values
   int top = (vTR + vTL) / 2;      // average of top right and top left voltages
   int bottom = (vBR + vBL) / 2;   // average of bottom right and bottom left voltages
@@ -194,7 +212,7 @@ void quadrant(long increment)
 
   if(right > left)
   {
-    replyData = sendCommand(azimuth, moveRel, increment);
+    replyData = sendCommand(azimuth, moveRel, increment)
   }
   else if(right < left)
   {
