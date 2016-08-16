@@ -177,6 +177,16 @@ void quadrant(long increment)
   int vBR = readAnalog(bottomR, iter8);    // voltage from bottom right photoresistor
   int vBL = readAnalog(bottomL, iter8);    // voltage from bottom left photoresistor
 
+  // Print 10-bit values read by the ADC from photoresistor voltage divider
+  Serial.print("Top Right: ");
+  Serial.print(vTR);
+  Serial.print("\tTop Left: ");
+  Serial.print(vTL);
+  Serial.print("\tBottom Right: ");
+  Serial.print(vBR);
+  Serial.print("\tBottom Left: ");
+  Serial.println(vBL);
+
   // Find average values
   int top = (vTR + vTL) / 2;      // average of top right and top left voltages
   int bottom = (vBR + vBL) / 2;   // average of bottom right and bottom left voltages

@@ -1,4 +1,5 @@
 /*   Closed-loop LDR-based quadrant solar tracker
+ *    Hitachi HD44780 LCD output
  *   
  *   Michael Lipski
  *   AOPL
@@ -83,7 +84,7 @@ void loop()
   if(currentMillis - previousMillis > intervalShort)
   {
     previousMillis = currentMillis;
-    quadrant(stepsD(0.05));
+    quadrant(stepsD(0.2));
   }  
 }
 
