@@ -210,7 +210,7 @@ void quadrant(long increment)
 
   if(right > left)
   {
-    replyData = sendCommand(azimuth, moveRel, increment)
+    replyData = sendCommand(azimuth, moveRel, increment);
   }
   else if(right < left)
   {
