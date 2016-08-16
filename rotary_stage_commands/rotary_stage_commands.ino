@@ -63,8 +63,12 @@ long stepsR(float radis)
 
 void sendCommand(int device, int com, long data)
 {
-   unsigned int temp;
-   long replyData;
+   unsigned long data2;
+   unsigned long temp;
+   unsigned long repData;
+   long replyNeg;
+   float replyFloat;
+   byte dumper[1];
    
    // Building the six command bytes
    command[0] = byte(device);
@@ -83,15 +87,17 @@ void sendCommand(int device, int com, long data)
    command[3] = byte(temp);
    data -= (256 * data);
    command[2] = byte(data);
+
+   // Clearing serial buffer
+   while(rs232.available() > 0)
+   {
+     rs232.readBytes(dumper, 1);
+   }
    
    // Sending command to stage(s)
-   rs232.print(command[0]);
-   rs232.print(command[1]);
-   rs232.print(command[2]);
-   rs232.print(command[3]);
-   rs232.print(command[4]);
-   rs232.print(command[5]);
-   delay(500);
+   rs232.write(command, 6);
+
+   delay(20);
    
    // Reading device reply
    if(rs232.available() > 0)
@@ -99,7 +105,9 @@ void sendCommand(int device, int com, long data)
      rs232.readBytes(reply, 6);
    }
 
-   replyData = (cubed * reply[5]) + (squared * reply[4]) + (256 * reply[3]) + reply[2];
+   replyFloat = (cubed * float(reply[5])) + (squared * float(reply[4])) + (256 * float(reply[3])) + float(reply[2]); 
+   repData = long(replyFloat);
+   
    if(reply[5] > 127)
    {
      replyData -= quad;

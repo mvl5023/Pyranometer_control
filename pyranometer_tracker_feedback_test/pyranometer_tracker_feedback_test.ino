@@ -93,6 +93,7 @@ long sendCommand(int device, int com, long data)
    unsigned long temp;
    unsigned long repData;
    long replyNeg;
+   float replyFloat;
    byte dumper[1];
    
    // Building the six command bytes
@@ -134,12 +135,8 @@ long sendCommand(int device, int com, long data)
      rs232.readBytes(reply, 6);
    }
    
-   repData = (cubed * reply[5]) + (squared * reply[4]) + (256 * reply[3]) + reply[2];
-
-   if(reply[4] == 1)
-   {
-     repData += 65536;
-   }
+   replyFloat = (cubed * float(reply[5])) + (squared * float(reply[4])) + (256 * float(reply[3])) + float(reply[2]); 
+   repData = long(replyFloat);
    
    if(reply[5] > 127)
    {
