@@ -92,7 +92,7 @@ void loop()
   //  Feed-forward tracking
   if(currentMillis - longMillis >= intervalLong)
   {
-    while (gpsSerial.available() > 0)
+    if(gpsSerial.available() > 0)
     {
       if(gps.encode(gpsSerial.read()))
       {
