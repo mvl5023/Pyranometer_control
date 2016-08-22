@@ -52,8 +52,8 @@ unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 
 //On Mega, RX must be one of the following: pin 10-15, 50-53, A8-A15
-int RXPin = 2;
-int TXPin = 3;
+int RXPin = 4;
+int TXPin = 5;
 
 LiquidCrystal lcd(8, 9, 10, 11, 12, 13);      // (RS, enable, D4, D5, D6, D7)
 

@@ -49,8 +49,8 @@ unsigned long currentMillis = 0;
 unsigned long shortMillis = 0;
 
 //On Mega, RX must be one of the following: pin 10-15, 50-53, A8-A15
-int RXPin = 2;
-int TXPin = 3;
+int RXPin = 4;
+int TXPin = 5;
 
 SoftwareSerial rs232(RXPin, TXPin);   //RX, TX
 
