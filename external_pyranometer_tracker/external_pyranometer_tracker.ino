@@ -20,6 +20,8 @@ int bottomL = 3;    // bottom left photoresistor
 int dLay = 100;   //time between incremental movement and photoresistor voltage read
 int iter8 = 100;   //number of reads the photoresistor voltage is averaged over
 
+int threshold = 10;   // Differences between ADC readings that are below this value do not trigger movement
+
 //    Zaber rotational stage variables
 byte command[6];
 char reply[6];
@@ -189,23 +191,30 @@ void quadrant(long increment)
   int bottom = (vBR + vBL) / 2;   // average of bottom right and bottom left voltages
   int right = (vTR + vBR) / 2;    // average of top right and bottom right voltages
   int left = (vTL + vBL) / 2;     // average of top left and bottom left voltages
+  
+  // Compare average values and decide whether or not to move and, if so, in which directions
+  if(abs(top - bottom) > threshold)
+  {
+    if(top > bottom)
+    {
+      replyData = sendCommand(zenith, moveRel, (-1)*increment);
+    }
+    else if(top < bottom)
+    {
+      replyData = sendCommand(zenith, moveRel, increment);
+    }
+  }
 
-  if(top > bottom)
+  if(abs(right - left) > threshold)
   {
-    replyData = sendCommand(zenith, moveRel, (-1)*increment);
+    if(right > left)
+    {
+      replyData = sendCommand(azimuth, moveRel, increment);
+    }
+    else if(right < left)
+    {
+      replyData = sendCommand(azimuth, moveRel, (-1)*increment);
+    }  
   }
-  else if(top < bottom)
-  {
-    replyData = sendCommand(zenith, moveRel, increment);
-  }
-
-  if(right > left)
-  {
-    replyData = sendCommand(azimuth, moveRel, increment);
-  }
-  else if(right < left)
-  {
-    replyData = sendCommand(azimuth, moveRel, (-1)*increment);
-  }  
 }
 
