@@ -96,15 +96,6 @@ void setup()
 void loop()
 {
   currentMillis = millis();
-
-  //  Feed-forward tracking
-  if(currentMillis - longMillis >= intervalLong)
-  {
-    if(gpsSerial.available() > 0)
-    {
-      if(gps.encode(gpsSerial.read()))
-      {
-        longMillis = currentMillis;
         SunPos.UT = gps.time.hour() + double(gps.time.minute())/60.0 + double(gps.time.second())/3600.0 + double(gps.time.centisecond())/360000; // UT in hours [decimal]
         SunPos.Day = gps.date.day(); // day [integer]
         SunPos.Month = gps.date.month(); // month [integer]
@@ -139,9 +130,23 @@ void loop()
 
         azimPos = sendCommand(azimuth, moveAbs, stepsR(phi));
         zeniPos = sendCommand(zenith, moveAbs, stepsR(theta));
+
+        delay(5000);
+
+/*
+  //  Feed-forward tracking
+  if(currentMillis - longMillis >= intervalLong)
+  {
+    if(gpsSerial.available() > 0)
+    {
+      if(gps.encode(gpsSerial.read()))
+      {
+        longMillis = currentMillis;
+
       }
     }
   }
+  */
 }
 
 long sendCommand(int device, int com, long data)
